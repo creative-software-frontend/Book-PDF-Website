@@ -1,14 +1,18 @@
 import './App.css';
-import { useRef, useState, useMemo } from 'react';
+import { useRef, useState, useMemo, useEffect } from 'react';
 import CheckoutModal from './components/CheckoutModal';
 import Navbar from './components/Navbar';
 import Heading from './components/Heading';
 import Faq from './components/Faq';
 import ContactIcon from './components/ContactIcon';
 import ReviewSection from './components/ReviewSection';
+import ProductCrd from './components/ProductCrd';
 
 function App() {
   const [quantity, setQuantity] = useState(1);
+  const [products, setProducts] = useState([]);
+  console.log(products);
+
   const [orderComplete, setOrderComplete] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -68,20 +72,49 @@ function App() {
     [book.originalPrice, book.price, quantity]
   );
 
+  // api call
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch(
+          `https://admin.prothomashop.com/api/category/51/products`
+        );
+        const data = await response.json();
+
+        setProducts(data.result.products);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navbar quantity={quantity} />
 
+      {/* product cards container */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">Our Products</h1>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {products.map(product => (
+            <ProductCrd key={product.id} product={product} />
+          ))}
+        </div>
+      </div>
+
       {/* ✅ Heading with Scroll Handler */}
-      <Heading
+      {/* <Heading
         onBuyNow={() => {
           checkoutRef.current?.scrollIntoView({ behavior: 'smooth' });
         }}
-      />
+      /> */}
 
       {/* Review Section */}
-      <ReviewSection />
-      <Faq />
+      {/* <ReviewSection />
+      <Faq /> */}
 
       {/* ✅ Checkout Section (with ref) */}
       <CheckoutModal
