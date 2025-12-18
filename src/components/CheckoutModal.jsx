@@ -1,304 +1,276 @@
-import axios from 'axios';
 import React, { forwardRef } from 'react';
 import {
   FaPlus,
   FaMinus,
-  FaLock,
-  FaTruck,
-  FaShieldAlt,
-  FaCreditCard,
+  FaTrash,
+  FaShoppingBag,
+  FaUser,
+  FaPhone,
+  FaMapMarkerAlt,
+  FaCheckCircle,
 } from 'react-icons/fa';
 
 const CheckoutModal = forwardRef(
   (
-    { product, quantity, setQuantity, totalPrice, formData, handleInputChange },
+    { cartItems, setCartItems, totalPrice, formData, handleInputChange },
     ref
   ) => {
-    if (!product) {
+    if (cartItems.length === 0) {
       return (
         <div ref={ref} className="py-20 text-center">
-          <div className="max-w-md mx-auto">
-            <div className="text-gray-400 text-6xl mb-4">🛒</div>
-            <h3 className="text-2xl font-semibold text-gray-600 mb-2">
+          <div className="flex flex-col items-center justify-center">
+            <FaShoppingBag className="text-6xl text-gray-300 mb-4" />
+            <h3 className="text-2xl font-semibold text-gray-400 mb-2">
               আপনার কার্ট খালি
             </h3>
-            <p className="text-gray-500">
-              চেকআউট শুরু করতে একটি পণ্য নির্বাচন করুন
-            </p>
+            <p className="text-gray-500">শুরু করতে কিছু পণ্য যোগ করুন</p>
           </div>
         </div>
       );
     }
-    const handleSubmitOrder = async e => {
+
+    const updateQuantity = (id, type) => {
+      setCartItems(prev =>
+        prev.map(item =>
+          item.id === id
+            ? {
+                ...item,
+                quantity:
+                  type === 'inc'
+                    ? item.quantity + 1
+                    : Math.max(1, item.quantity - 1),
+              }
+            : item
+        )
+      );
+    };
+
+    const removeItem = id => {
+      setCartItems(prev => prev.filter(item => item.id !== id));
+    };
+
+    const handleSubmitOrder = e => {
       e.preventDefault();
 
-      // ----------
       const order = {
-        user_name: formData.name,
-        user_phone: formData.phone,
-        user_address: formData.address,
-        product_id: product.id,
-        product_name: product.title,
-        product_image: product.image,
-        quantity: Number(quantity),
-        total: Number(totalPrice),
-        payment_method: 'zpay',
+        customer: formData,
+        products: cartItems.map(item => ({
+          product_id: item.id,
+          name: item.title,
+          price: item.sale_price,
+          quantity: item.quantity,
+          total: item.sale_price * item.quantity,
+        })),
+        grandTotal: totalPrice,
       };
 
-      try {
-        const response = await axios.post(
-          `https://sarbarna.com/api/order/store`,
-          order
-        );
-
-        const { payment_url } = response.data;
-
-        // ✅ save order id
-
-        // ✅ MUST be immediate
-        if (payment_url) {
-          const newWindow = window.open(
-            payment_url,
-            '_blank',
-            'noopener,noreferrer'
-          );
-
-          if (!newWindow) {
-            alert('Popup blocked! Please allow popups.');
-          }
-        }
-
-        // setShowSuccess(true);
-      } catch (error) {
-        console.error('❌ API Error:', error);
-        alert(
-          error?.response?.data?.message ||
-            'Failed to submit order. Please try again.'
-        );
-      }
+      console.log('অর্ডার ডেটা 👉', order);
+      alert('অর্ডার সফলভাবে জমা হয়েছে! বিস্তারিত দেখতে কনসোল চেক করুন।');
     };
 
     return (
-      <div ref={ref} className="max-w-7xl mx-auto p-4 md:p-8">
-        <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl overflow-hidden">
-          <div className="p-6 md:p-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">
-              আপনার কেনাকাটা সম্পন্ন করুন
-            </h2>
-            <p className="text-gray-600 mb-8">অর্ডার ডেলিভারির শেষ ধাপ</p>
+      <div
+        ref={ref}
+        className="max-w-7xl mx-auto p-6  bg-gradient-to-br from-white to-gray-50 rounded-md shadow-2xl "
+      >
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-800">চেকআউট</h2>
+            <p className="text-gray-600 mt-1">আপনার ক্রয় সম্পূর্ণ করুন</p>
+          </div>
+          <div className="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full font-semibold flex items-center gap-2">
+            <FaShoppingBag />
+            <span>
+              {cartItems.length} {cartItems.length === 1 ? 'আইটেম' : 'আইটেম'}
+            </span>
+          </div>
+        </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Order Summary Card */}
-              <div className="bg-white ">
-                <div className="mb-8">
-                  <h3 className="text-xl font-bold text-gray-900">
-                    অর্ডার সারসংক্ষেপ
-                  </h3>
-                  <p className="text-gray-500 text-sm mt-1">
-                    আপনার পণ্য এবং মোট মূল্য যাচাই করুন
-                  </p>
+        {/* Products Section - Table Style */}
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            অর্ডার সামারি
+          </h3>
+
+          <div className="overflow-hidden rounded-md border border-gray-200">
+            {/* Table Headers */}
+            <div className="grid grid-cols-12 bg-gray-50 px-4 py-3 text-sm font-medium text-gray-700">
+              <div className="col-span-5">পণ্য</div>
+              <div className="col-span-2 text-center">দাম</div>
+              <div className="col-span-3 text-center">পরিমাণ</div>
+              <div className="col-span-2 text-right">মোট</div>
+            </div>
+
+            {/* Table Items */}
+            <div className="divide-y divide-gray-100">
+              {cartItems.map(item => (
+                <div
+                  key={item.id}
+                  className="grid grid-cols-12 items-center px-4 py-3 hover:bg-gray-50"
+                >
+                  {/* Product Info */}
+                  <div className="col-span-5 flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100">
+                      <img
+                        src={`https://admin.prothomashop.com/product/${item.image}`}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-900 text-sm">
+                        {item.title}
+                      </h4>
+                    </div>
+                  </div>
+
+                  {/* Price */}
+                  <div className="col-span-2 text-center text-gray-700">
+                    {item.sale_price} টাকা
+                  </div>
+
+                  {/* Quantity Controls */}
+                  <div className="col-span-3 flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => updateQuantity(item.id, 'dec')}
+                      className="w-7 h-7 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-100 disabled:opacity-30"
+                      disabled={item.quantity <= 1}
+                    >
+                      <FaMinus className="text-xs" />
+                    </button>
+
+                    <span className="w-8 text-center font-medium">
+                      {item.quantity}
+                    </span>
+
+                    <button
+                      onClick={() => updateQuantity(item.id, 'inc')}
+                      className="w-7 h-7 flex items-center justify-center border border-gray-300 rounded hover:bg-gray-100"
+                    >
+                      <FaPlus className="text-xs" />
+                    </button>
+                  </div>
+
+                  {/* Total and Actions */}
+                  <div className="col-span-2 flex items-center justify-end gap-3">
+                    <span className="font-semibold text-gray-900">
+                      {item.sale_price * item.quantity} টাকা
+                    </span>
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      className="text-gray-400 hover:text-red-500"
+                      title="মুছে ফেলুন"
+                    >
+                      <FaTrash className="text-sm" />
+                    </button>
+                  </div>
                 </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
-                {/* Product Card */}
-                <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl mb-6">
-                  <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <img
-                      src={`https://admin.prothomashop.com/product/${product.image}`}
-                      alt={product.title}
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-gray-900 truncate">
-                      {product.title}
-                    </h4>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-lg font-bold text-gray-900">
-                        {product.sale_price} টাকা
-                      </span>
-                      {product.original_price && (
-                        <span className="text-sm text-gray-400 line-through">
-                          {product.original_price} টাকা
-                        </span>
-                      )}
-                      {product.original_price && (
-                        <span className="text-xs bg-red-50 text-red-600 px-2 py-0.5 rounded-full">
-                          সাশ্রয় {product.original_price - product.sale_price}{' '}
-                          টাকা
-                        </span>
-                      )}
-                    </div>
-                    {product.category && (
-                      <span className="inline-block text-xs text-indigo-600 bg-indigo-50 px-2 py-1 rounded mt-2">
-                        {product.category}
-                      </span>
-                    )}
-                  </div>
-                </div>
+        {/* Order Summary */}
+        <div className="mb-8 p-6 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-md border border-indigo-100">
+          <h3 className="text-xl font-semibold text-gray-700 mb-4">
+            অর্ডার বিস্তারিত
+          </h3>
+          <div className="space-y-3">
+            {cartItems.map(item => (
+              <div key={item.id} className="flex justify-between items-center">
+                <span className="text-gray-600">
+                  {item.title} × {item.quantity}
+                </span>
+                <span className="font-medium">
+                  {item.sale_price * item.quantity} টাকা
+                </span>
+              </div>
+            ))}
+            <div className="border-t pt-3 mt-3">
+              <div className="flex justify-between items-center">
+                <span className="text-lg font-semibold text-gray-800">
+                  মোট মূল্য
+                </span>
+                <span className="text-2xl font-bold text-indigo-700">
+                  {totalPrice} টাকা
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-                {/* Quantity Control */}
-                <div className="mb-8">
-                  <p className="text-gray-700 font-medium mb-3">
-                    পরিমাণ পরিবর্তন করুন
-                  </p>
-                  <div className="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-4">
-                    <div className="flex items-center gap-6">
-                      <div className="flex items-center gap-4 bg-gray-50 px-4 py-2 rounded-lg">
-                        <button
-                          onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                          className="w-8 h-8 flex items-center justify-center bg-white hover:bg-gray-100 rounded-full transition-all shadow-sm"
-                          aria-label="পরিমাণ কমান"
-                        >
-                          <FaMinus className="text-gray-600 text-sm" />
-                        </button>
-                        <span className="text-xl font-bold text-gray-900 min-w-[2rem] text-center">
-                          {quantity}
-                        </span>
-                        <button
-                          onClick={() => setQuantity(q => q + 1)}
-                          className="w-8 h-8 flex items-center justify-center bg-white hover:bg-gray-100 rounded-full transition-all shadow-sm"
-                          aria-label="পরিমাণ বাড়ান"
-                        >
-                          <FaPlus className="text-gray-600 text-sm" />
-                        </button>
-                      </div>
-                      <span className="text-gray-600 text-sm">
-                        {quantity} টি পণ্য নির্বাচন করা হয়েছে
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm text-gray-500">একক মূল্য</p>
-                      <p className="font-semibold text-gray-900">
-                        {product.sale_price} টাকা
-                      </p>
-                    </div>
-                  </div>
-                </div>
+        {/* Customer Information Form */}
+        <form onSubmit={handleSubmitOrder} className="space-y-6">
+          <div className="bg-white rounded-md p-6 shadow-sm border border-gray-100">
+            <h3 className="text-xl font-semibold text-gray-700 mb-6 flex items-center gap-2">
+              <FaUser className="text-indigo-600" />
+              গ্রাহকের তথ্য
+            </h3>
 
-                {/* Pricing Breakdown */}
-                <div className="space-y-4">
-                  <div className="border-t border-gray-100 pt-6 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">পণ্যের মোট মূল্য</span>
-                      <span className="font-medium">
-                        {product.sale_price} × {quantity}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center text-gray-600 text-sm">
-                      <span>কর ও চার্জ</span>
-                      <span>অন্তর্ভুক্ত</span>
-                    </div>
-
-                    <div className="border-t border-gray-200 pt-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-lg font-semibold text-gray-900">
-                          মোট পরিশোধযোগ্য
-                        </span>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold text-gray-900">
-                            {totalPrice} টাকা
-                          </p>
-                          <p className="text-sm text-gray-500 mt-1">
-                            পরিশোধযোগ্য পরিমাণ
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  পুরো নাম
+                </label>
+                <div className="relative">
+                  <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    name="name"
+                    placeholder="জন ডো"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 p-3 pl-10 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                    required
+                  />
                 </div>
               </div>
 
-              {/* Customer Information Form */}
-              <div className="space-y-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-                  <FaCreditCard className="text-indigo-600" />
-                  ডেলিভারি তথ্য
-                </h3>
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ফোন নম্বর
+                </label>
+                <div className="relative">
+                  <FaPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    name="phone"
+                    placeholder="+৮৮০ ১XXX XXXXXX"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="w-full border border-gray-300 p-3 pl-10 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                    required
+                  />
+                </div>
+              </div>
 
-                <form onSubmit={handleSubmitOrder} className="space-y-5">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">
-                      পূর্ণ নাম
-                    </label>
-                    <input
-                      type="text"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      placeholder="আপনার পুরো নাম লিখুন"
-                      required
-                      className="w-full border p-4 rounded-xl"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">
-                      ফোন নম্বর
-                    </label>
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      placeholder="মোবাইল নম্বর লিখুন"
-                      required
-                      className="w-full border p-4 rounded-xl"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">
-                      ডেলিভারি ঠিকানা
-                    </label>
-                    <textarea
-                      name="address"
-                      value={formData.address}
-                      onChange={handleInputChange}
-                      placeholder="সম্পূর্ণ ঠিকানা লিখুন"
-                      required
-                      rows="3"
-                      className="w-full border p-4 rounded-xl resize-none"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <FaShieldAlt className="text-indigo-600" />
-                      <div>
-                        <p className="font-medium">নিরাপদ পেমেন্ট</p>
-                        <p className="text-sm text-gray-600">
-                          আপনার তথ্য সম্পূর্ণ সুরক্ষিত
-                        </p>
-                      </div>
-                    </div>
-                    <FaLock className="text-green-500 text-xl" />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="w-full bg-indigo-600 text-white py-4 rounded-xl text-lg font-semibold"
-                  >
-                    অর্ডার নিশ্চিত করুন – {totalPrice} টাকা
-                  </button>
-
-                  <p className="text-center text-sm text-gray-500">
-                    নিশ্চিত করার মাধ্যমে আপনি আমাদের শর্তাবলীতে সম্মত হচ্ছেন
-                  </p>
-                </form>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  ডেলিভারি ঠিকানা
+                </label>
+                <div className="relative">
+                  <FaMapMarkerAlt className="absolute left-3 top-3 text-gray-400" />
+                  <textarea
+                    name="address"
+                    placeholder="আপনার সম্পূর্ণ ডেলিভারি ঠিকানা লিখুন"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    rows="3"
+                    className="w-full border border-gray-300 p-3 pl-10 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all resize-none"
+                    required
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-gray-50 border border-gray-300 p-4 text-center">
-            <p className="text-sm text-gray-600">
-              সাহায্য প্রয়োজন? কল করুন:
-              <span className="font-medium text-indigo-600">
-                +880 XXX-XXXXXX
-              </span>
-            </p>
-          </div>
-        </div>
+          {/* Submit Button */}
+          <button
+            type="submit"
+            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-md font-bold text-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
+          >
+            <FaCheckCircle />
+            অর্ডার নিশ্চিত করুন &nbsp; • &nbsp; {totalPrice} টাকা
+          </button>
+        </form>
       </div>
     );
   }

@@ -2,7 +2,7 @@ import React from 'react';
 
 const ProductCrd = ({ product, onOrder }) => {
   return (
-    <div className="max-w-sm bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition flex flex-col">
+    <div className="max-w-sm bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
       <img
         src={`https://admin.prothomashop.com/product/${product.image}`}
         alt={product.title}
@@ -23,7 +23,6 @@ const ProductCrd = ({ product, onOrder }) => {
           <span className="text-green-600 font-bold text-lg">
             {product.sale_price} Tk
           </span>
-
           {product.price !== product.sale_price && (
             <span className="line-through text-gray-400 text-sm">
               {product.price} Tk
@@ -35,7 +34,7 @@ const ProductCrd = ({ product, onOrder }) => {
           onClick={() => onOrder(product)}
           className="mt-auto bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
         >
-          Order Now
+          Add to Cart
         </button>
       </div>
     </div>
