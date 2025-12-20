@@ -1,7 +1,7 @@
 import { FaShoppingCart } from 'react-icons/fa';
 import { GiBookmarklet } from 'react-icons/gi';
 
-function Navbar({ quantity, setShowCheckout }) {
+function Navbar({ quantity }) {
   return (
     <nav className="bg-white shadow-lg top-0 z-50 sticky">
       <div className="max-w-7xl mx-auto px-4">
@@ -15,10 +15,7 @@ function Navbar({ quantity, setShowCheckout }) {
           </div>
 
           <div className="flex items-center space-x-4">
-            <button
-              onClick={() => setShowCheckout(true)}
-              className="bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700 transition duration-300 flex items-center space-x-2"
-            >
+            <button className="bg-indigo-600 text-white px-6 py-2 rounded-full hover:bg-indigo-700 transition duration-300 flex items-center space-x-2">
               <FaShoppingCart />
               <span>Checkout ({quantity})</span>
             </button>
