@@ -8,6 +8,7 @@ import ContactIcon from './components/ContactIcon';
 function App() {
   const [products, setProducts] = useState([]);
   const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -20,6 +21,7 @@ function App() {
   // 🔹 Fetch products
   useEffect(() => {
     const fetchProducts = async () => {
+      setLoading(true);
       try {
         const res = await fetch(
           'https://admin.prothomashop.com/api/category/51/products'
@@ -35,6 +37,8 @@ function App() {
         }
       } catch (error) {
         console.error(error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -69,6 +73,14 @@ function App() {
 
     checkoutRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-10 h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-4 border-gray-300 border-t-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 pb-10">
