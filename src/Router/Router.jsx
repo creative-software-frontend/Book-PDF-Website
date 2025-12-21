@@ -13,7 +13,7 @@ const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        // path: 'order-complete',
+        path: 'order-complete',
         element: <OrderComplete />,
       },
     ],
