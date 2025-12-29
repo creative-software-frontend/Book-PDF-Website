@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useState } from 'react';
 import axios from 'axios';
 
 import {
@@ -26,6 +26,7 @@ const CheckoutModal = forwardRef(
     ref
   ) => {
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);
 
     if (cartItems.length === 0) {
       return (
@@ -65,6 +66,10 @@ const CheckoutModal = forwardRef(
 
     const handleSubmitOrder = async e => {
       e.preventDefault();
+
+      if (loading) return; // 🔒 double submit block
+
+      setLoading(true);
 
       const payload = {
         name: formData.name,
@@ -108,6 +113,8 @@ const CheckoutModal = forwardRef(
       } catch (error) {
         console.error('❌ Order Error:', error);
         alert('Something went wrong!');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -382,12 +389,47 @@ const CheckoutModal = forwardRef(
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 md:py-4 rounded-md font-bold text-base md:text-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 md:gap-3"
+            disabled={loading}
+            className={`w-full py-3 md:py-4 rounded-md font-bold text-base md:text-lg 
+  flex items-center justify-center gap-2 md:gap-3 transition-all duration-300
+  ${
+    loading
+      ? 'bg-gray-400 cursor-not-allowed'
+      : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl'
+  }`}
           >
-            <FaCheckCircle className="text-sm md:text-base" />
-            <span className="text-sm md:text-base">
-              অর্ডার নিশ্চিত করুন &nbsp; • &nbsp; {totalPrice} টাকা
-            </span>
+            {loading ? (
+              <>
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  />
+                </svg>
+                <span>অর্ডার প্রসেস হচ্ছে...</span>
+              </>
+            ) : (
+              <>
+                <FaCheckCircle className="text-sm md:text-base" />
+                <span>
+                  অর্ডার নিশ্চিত করুন &nbsp; • &nbsp; {totalPrice} টাকা
+                </span>
+              </>
+            )}
           </button>
         </form>
       </div>
