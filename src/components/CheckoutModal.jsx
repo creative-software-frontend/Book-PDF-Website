@@ -1,4 +1,6 @@
 import React, { forwardRef } from 'react';
+import axios from 'axios';
+
 import {
   FaPlus,
   FaMinus,
@@ -9,12 +11,22 @@ import {
   FaMapMarkerAlt,
   FaCheckCircle,
 } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const CheckoutModal = forwardRef(
   (
-    { cartItems, setCartItems, totalPrice, formData, handleInputChange },
+    {
+      cartItems,
+      setCartItems,
+      totalPrice,
+      formData,
+      handleInputChange,
+      setFormData,
+    },
     ref
   ) => {
+    const navigate = useNavigate();
+
     if (cartItems.length === 0) {
       return (
         <div ref={ref} className="py-12 md:py-20 text-center px-4">
@@ -51,23 +63,52 @@ const CheckoutModal = forwardRef(
       setCartItems(prev => prev.filter(item => item.id !== id));
     };
 
-    const handleSubmitOrder = e => {
+    const handleSubmitOrder = async e => {
       e.preventDefault();
 
-      const order = {
-        customer: formData,
-        products: cartItems.map(item => ({
-          product_id: item.id,
-          name: item.title,
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        mobile: formData.phone,
+        reference: formData.reference || '',
+        batch_no: formData.batch_no || '',
+        amount: totalPrice,
+        payment_method: 'zpay',
+
+        courses: cartItems.map(item => ({
+          id: item.id,
+          title: item.title,
+          image: item.image,
           price: item.sale_price,
-          quantity: item.quantity,
-          total: item.sale_price * item.quantity,
+          link: item.link || '',
         })),
-        grandTotal: totalPrice,
       };
 
-      console.log('অর্ডার ডেটা 👉', order);
-      alert('অর্ডার সফলভাবে জমা হয়েছে! বিস্তারিত দেখতে কনসোল চেক করুন।');
+      console.log('📦 Sending Order Payload:', payload);
+
+      try {
+        const res = await axios.post(
+          'https://sarbarna.com/api/course-order',
+          payload
+        );
+
+        console.log('✅ API Response:', res.data);
+
+        if (res.data.status) {
+          const finalData = {
+            ...payload,
+            address: formData.address,
+          };
+          // 👉 payment page এ redirect
+          window.location.href = res.data.payment_url;
+          navigate('/order-complete', { state: { finalData } });
+        } else {
+          alert('Order failed!');
+        }
+      } catch (error) {
+        console.error('❌ Order Error:', error);
+        alert('Something went wrong!');
+      }
     };
 
     return (
@@ -275,13 +316,13 @@ const CheckoutModal = forwardRef(
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div className="relative">
                 <label className="block text-sm font-medium text-gray-700 mb-1 md:mb-2">
-                  পুরো নাম
+                  আপনার নাম
                 </label>
                 <div className="relative">
                   <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
                   <input
                     name="name"
-                    placeholder="জন ডো"
+                    placeholder="আপনার নাম লিখুন"
                     value={formData.name}
                     onChange={handleInputChange}
                     className="w-full border border-gray-300 p-2 md:p-3 pl-9 md:pl-10 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm md:text-base"
@@ -298,11 +339,22 @@ const CheckoutModal = forwardRef(
                   <FaPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
                   <input
                     name="phone"
-                    placeholder="+৮৮০ ১XXX XXXXXX"
+                    placeholder="8801XXXXXXXXX"
                     value={formData.phone}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 p-2 md:p-3 pl-9 md:pl-10 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm md:text-base"
+                    onChange={e => {
+                      const v = e.target.value.replace(/\D/g, '');
+                      setFormData({ ...formData, phone: v });
+                    }}
+                    onInvalid={e =>
+                      e.target.setCustomValidity(
+                        'Phone number must be at least 11 digits'
+                      )
+                    }
+                    onInput={e => e.target.setCustomValidity('')}
+                    minLength={11}
+                    maxLength={13}
                     required
+                    className="w-full border border-gray-300 p-2 md:p-3 pl-9 md:pl-10 rounded-md focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               </div>

@@ -2,7 +2,7 @@ import { useRef, useState, useMemo, useEffect } from 'react';
 import ProductCrd from '../../components/ProductCrd';
 import ContactIcon from '../../components/ContactIcon';
 import CheckoutModal from '../../components/CheckoutModal';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 
 const Home = () => {
   const { cartItems, setCartItems } = useOutletContext();
@@ -16,7 +16,6 @@ const Home = () => {
   });
 
   const checkoutRef = useRef(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -67,11 +66,6 @@ const Home = () => {
     checkoutRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleOrderSubmit = () => {
-    // API call for order can be added here
-    navigate('/order-complete');
-  };
-
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -106,8 +100,8 @@ const Home = () => {
           setCartItems={setCartItems}
           totalPrice={totalPrice}
           formData={formData}
+          setFormData={setFormData}
           handleInputChange={handleInputChange}
-          handleOrderSubmit={handleOrderSubmit}
         />
       </div>
 
